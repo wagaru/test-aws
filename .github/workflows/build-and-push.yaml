@@ -1,0 +1,31 @@
+name: 'build-and-push'
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  buildImage:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.AWS_ECR_DRP_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo $REGISTRY
+          #docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          #docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
